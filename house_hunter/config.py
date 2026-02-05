@@ -2,7 +2,7 @@
 
 # Search Parameters
 SEARCH_CITIES = {
-    "phoenix_metro": ["Gilbert, AZ", "Chandler, AZ", "Scottsdale, AZ", "Mesa, AZ", "Surprise, AZ"],
+    "phoenix_metro": ["Gilbert, AZ", "Chandler, AZ", "Scottsdale, AZ", "Mesa, AZ", "Surprise, AZ", "Paradise Valley, AZ"],
     "tucson_area": ["Tucson, AZ", "Green Valley, AZ", "Oro Valley, AZ"]
 }
 
@@ -16,6 +16,7 @@ REDFIN_REGIONS = {
     "Green Valley": {"type": "city", "id": 23055, "state": "AZ"},
     "Oro Valley": {"type": "city", "id": 13300, "state": "AZ"},
     "Surprise": {"type": "city", "id": 18267, "state": "AZ"},
+    "Paradise Valley": {"type": "city", "id": 13625, "state": "AZ"},
 }
 
 # Price and property filters
@@ -39,6 +40,7 @@ DOWNTOWN_COORDS = {
     "Green Valley": (31.8543, -110.9932),
     "Oro Valley": (32.3909, -110.9665),
     "Surprise": (33.6306, -112.3332),
+    "Paradise Valley": (33.5312, -111.9426),
 }
 
 # City-level crime indices (higher = safer, scale 0-100)
@@ -55,6 +57,7 @@ CITY_CRIME_INDEX = {
     "Marana": 70,           # Safe (Tucson suburb)
     "Vail": 75,             # Safe (Tucson suburb)
     "Surprise": 80,         # Safe (growing retiree community)
+    "Paradise Valley": 82,  # Very safe (affluent community)
     "Apache Junction": 50,  # Moderate
 }
 
@@ -73,6 +76,7 @@ WEIGHTS = {
 # Location preference weights (0-1 scale, higher = more preferred)
 LOCATION_WEIGHTS = {
     "Scottsdale": 1.00,       # Family proximity + top retiree amenities
+    "Paradise Valley": 0.98,  # Exclusive enclave, adjacent to Scottsdale
     "Gilbert": 0.97,          # #2 US News AZ retire, top safety/value
     "Surprise": 0.95,         # #1 US News AZ retire (83 US), elite safety/value
     "Chandler": 0.93,         # Top-5 AZ retire (187 US), healthcare balance

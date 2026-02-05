@@ -443,9 +443,9 @@ def main():
 
         min_sqft = st.number_input("Min Sqft", value=1200, step=100, format="%d")
 
-        all_cities = ['Gilbert', 'Chandler', 'Scottsdale', 'Surprise', 'Mesa', 'Queen Creek',
+        all_cities = ['Gilbert', 'Chandler', 'Scottsdale', 'Paradise Valley', 'Surprise', 'Mesa', 'Queen Creek',
                       'Apache Junction', 'Tucson', 'Green Valley', 'Oro Valley', 'Marana', 'Vail']
-        default_cities = ['Gilbert', 'Chandler', 'Scottsdale', 'Surprise', 'Queen Creek', 'Green Valley', 'Oro Valley']
+        default_cities = ['Gilbert', 'Chandler', 'Scottsdale', 'Paradise Valley', 'Surprise', 'Queen Creek', 'Green Valley', 'Oro Valley']
         cities = st.multiselect("Cities", options=all_cities, default=default_cities)
 
         st.markdown("**Features**")
