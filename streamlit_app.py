@@ -11,7 +11,7 @@ from datetime import datetime
 from house_hunter import database, config
 from house_hunter.models import Listing
 from house_hunter.fetcher import fetch_listings
-from house_hunter.enrichment import enrich_all_listings
+from house_hunter.enrichment import enrich_listing
 from house_hunter.scoring import score_all_listings
 
 # Page config - must be first Streamlit command
@@ -22,239 +22,183 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for mobile-first design
+# Dark mode CSS
 st.markdown("""
 <style>
-    /* Import fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
 
-    /* Root variables */
     :root {
-        --terracotta: #C4704B;
-        --terracotta-dark: #A85A38;
-        --sand: #F5F0E8;
-        --sand-dark: #E8E0D4;
-        --sage: #7A9E7E;
-        --night: #2D2A26;
-        --cream: #FDFBF7;
-        --stone: #6B6560;
+        --bg-primary: #1a1a1a;
+        --bg-secondary: #242424;
+        --bg-card: #2a2a2a;
+        --text-primary: #f0f0f0;
+        --text-secondary: #a0a0a0;
+        --accent: #C4704B;
+        --accent-light: #e8a889;
+        --success: #4ade80;
+        --warning: #fbbf24;
     }
 
-    /* Global styles */
     .stApp {
-        background-color: var(--sand);
+        background-color: var(--bg-primary);
     }
 
-    /* Hide Streamlit branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    #MainMenu, footer, header {visibility: hidden;}
 
-    /* Custom header */
-    .custom-header {
-        background: var(--night);
-        padding: 1rem 1.5rem;
-        margin: -1rem -1rem 1.5rem -1rem;
-        border-radius: 0 0 16px 16px;
-    }
-
-    .custom-header h1 {
-        font-family: 'Fraunces', Georgia, serif;
-        color: var(--cream);
-        font-size: 1.5rem;
-        margin: 0;
-    }
-
-    .custom-header p {
-        color: var(--stone);
-        font-size: 0.85rem;
-        margin: 0.25rem 0 0 0;
-    }
-
-    /* Stats bar */
-    .stats-bar {
+    /* Stats row */
+    .stats-row {
         display: flex;
-        justify-content: space-around;
-        background: var(--cream);
-        padding: 1rem;
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        gap: 1rem;
+        margin-bottom: 1rem;
     }
-
-    .stat-item {
+    .stat-box {
+        background: var(--bg-card);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        flex: 1;
         text-align: center;
     }
-
-    .stat-value {
-        font-family: 'Fraunces', Georgia, serif;
+    .stat-box .value {
         font-size: 1.25rem;
         font-weight: 700;
-        color: var(--night);
+        color: var(--text-primary);
     }
-
-    .stat-label {
+    .stat-box .label {
         font-size: 0.7rem;
-        color: var(--stone);
+        color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
 
-    /* Listing card */
-    .listing-card {
-        background: var(--cream);
-        border-radius: 16px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        transition: transform 0.2s, box-shadow 0.2s;
+    /* Compact listing card */
+    .compact-card {
+        background: var(--bg-card);
+        border-radius: 10px;
+        padding: 0.75rem;
+        height: 100%;
+        border: 1px solid #333;
+        transition: border-color 0.2s;
+    }
+    .compact-card:hover {
+        border-color: var(--accent);
     }
 
-    .listing-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-    }
-
-    .card-header {
+    .card-top {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 0.75rem;
-    }
-
-    .score-badge {
-        display: inline-flex;
-        flex-direction: column;
         align-items: center;
-        padding: 0.5rem 1rem;
-        border-radius: 10px;
-        min-width: 56px;
+        margin-bottom: 0.5rem;
     }
 
-    .score-high { background: #E8F0EA; color: #4A7C59; }
-    .score-mid { background: #FDF6E3; color: #B8860B; }
-    .score-low { background: #FBF0EC; color: #A0522D; }
-
-    .score-value {
-        font-family: 'Fraunces', Georgia, serif;
-        font-size: 1.5rem;
-        font-weight: 700;
-        line-height: 1;
-    }
-
-    .score-label {
-        font-size: 0.6rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .price-tag {
-        text-align: right;
-    }
-
-    .price-value {
-        font-family: 'Fraunces', Georgia, serif;
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--night);
-    }
-
-    .price-value.ideal { color: #4A7C59; }
-
-    .hoa-tag {
-        font-size: 0.75rem;
-        color: var(--stone);
-    }
-
-    .address {
-        font-weight: 500;
-        color: var(--night);
-        margin-bottom: 0.25rem;
-    }
-
-    .location {
-        font-size: 0.85rem;
-        color: var(--stone);
-        margin-bottom: 0.75rem;
-    }
-
-    .specs-row {
-        display: flex;
-        justify-content: space-around;
-        padding: 0.75rem 0;
-        border-top: 1px solid var(--sand);
-        border-bottom: 1px solid var(--sand);
-        margin-bottom: 0.75rem;
-    }
-
-    .spec-item {
-        text-align: center;
-    }
-
-    .spec-value {
-        font-family: 'Fraunces', Georgia, serif;
-        font-weight: 600;
-        color: var(--night);
-    }
-
-    .spec-label {
-        font-size: 0.65rem;
-        color: var(--stone);
-        text-transform: uppercase;
-    }
-
-    .features-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .feature-tag {
+    .score-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
         padding: 4px 10px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        background: var(--sand);
         border-radius: 20px;
-        color: var(--stone);
+        font-size: 0.85rem;
+        font-weight: 700;
+    }
+    .score-high { background: #166534; color: #bbf7d0; }
+    .score-mid { background: #854d0e; color: #fef08a; }
+    .score-low { background: #7f1d1d; color: #fecaca; }
+
+    .card-price {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .card-price.ideal { color: var(--success); }
+
+    .card-address {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 2px;
+    }
+    .card-city {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
     }
 
-    .feature-tag.active {
-        background: rgba(122, 158, 126, 0.2);
-        color: #5C7D60;
+    .card-specs {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+    }
+    .spec-tag {
+        background: var(--bg-secondary);
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+    .spec-tag strong {
+        color: var(--text-primary);
     }
 
-    /* Sidebar styling */
-    .css-1d391kg {
-        background: var(--cream);
+    .card-features {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+    .feature-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+    }
+    .feature-text {
+        font-size: 0.7rem;
+        color: var(--text-secondary);
     }
 
-    /* Button styling */
+    /* Override Streamlit defaults for dark mode */
+    .stSelectbox label, .stMultiSelect label, .stNumberInput label, .stCheckbox label {
+        color: var(--text-primary) !important;
+    }
+
     .stButton > button {
-        background: var(--terracotta);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        width: 100%;
-        transition: background 0.2s;
+        background: var(--accent) !important;
+        color: #1a1a1a !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: 600 !important;
     }
-
     .stButton > button:hover {
-        background: var(--terracotta-dark);
-        color: white;
+        background: var(--accent-light) !important;
+        color: #1a1a1a !important;
     }
 
-    /* Metric cards */
-    [data-testid="stMetricValue"] {
-        font-family: 'Fraunces', Georgia, serif;
-        color: var(--night);
+    /* Link buttons */
+    .stLinkButton > a {
+        background: var(--accent) !important;
+        color: #1a1a1a !important;
+        border-radius: 8px !important;
     }
 
-    /* Expander */
-    .streamlit-expanderHeader {
-        background: var(--cream);
-        border-radius: 10px;
+    /* Download button */
+    .stDownloadButton > button {
+        background: var(--bg-card) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid #444 !important;
+    }
+
+    div[data-testid="stMetricValue"] {
+        font-size: 1.1rem !important;
+    }
+
+    /* Sidebar dark */
+    section[data-testid="stSidebar"] {
+        background: var(--bg-secondary);
+    }
+    section[data-testid="stSidebar"] .stMarkdown {
+        color: var(--text-primary);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -282,84 +226,79 @@ def refresh_data():
     from house_hunter.fetcher import RedfinFetcher
     from house_hunter import config as hh_config
 
-    # Initialize
     all_listings = []
     seen_ids = set()
     cities = list(hh_config.REDFIN_REGIONS.keys())
 
-    # Create progress UI
+    # Progress UI
     progress_bar = st.progress(0)
     status_text = st.empty()
 
     fetcher = RedfinFetcher()
+    total_steps = len(cities) + 2  # cities + enrich + score
 
+    # Fetch from each city
     for i, city in enumerate(cities):
-        # Update progress
-        progress = (i) / len(cities)
-        progress_bar.progress(progress)
-        status_text.text(f"Fetching {city}... ({i+1}/{len(cities)})")
+        progress_bar.progress(i / total_steps)
+        status_text.text(f"📍 Fetching {city}... ({i+1}/{len(cities)})")
 
         try:
             listings = fetcher.fetch_city_listings(city)
-
-            # Deduplicate
             for listing in listings:
                 if listing.id not in seen_ids:
                     seen_ids.add(listing.id)
                     all_listings.append(listing)
-
-            status_text.text(f"Found {len(listings)} in {city} ({len(all_listings)} total)")
-
+            status_text.text(f"✓ {city}: {len(listings)} homes ({len(all_listings)} total)")
         except Exception as e:
-            status_text.text(f"Error fetching {city}: {str(e)[:50]}")
+            status_text.text(f"⚠ {city}: {str(e)[:40]}")
 
-        # Brief delay between requests
         if i < len(cities) - 1:
             time.sleep(1.5)
-
-    progress_bar.progress(0.7)
 
     if not all_listings:
         progress_bar.empty()
         status_text.empty()
-        st.error("No listings fetched. Redfin may be blocking this server. Try running locally instead.")
+        st.error("No listings fetched. Redfin may be unavailable.")
         return
 
-    # Enrich
-    status_text.text(f"Enriching {len(all_listings)} listings...")
-    try:
-        enriched = enrich_all_listings(all_listings)
-    except Exception as e:
-        st.warning(f"Enrichment partial: {e}")
-        enriched = all_listings
+    # Enrich with progress
+    status_text.text(f"🔍 Enriching {len(all_listings)} listings...")
+    progress_bar.progress(len(cities) / total_steps)
 
-    progress_bar.progress(0.85)
+    enriched = []
+    enrich_progress = st.progress(0)
+    for i, listing in enumerate(all_listings):
+        try:
+            enriched_listing = enrich_listing(listing)
+            enriched.append(enriched_listing)
+        except:
+            enriched.append(listing)
+        if i % 10 == 0:
+            enrich_progress.progress((i + 1) / len(all_listings))
+    enrich_progress.empty()
 
     # Score
-    status_text.text("Calculating value scores...")
+    status_text.text("📊 Calculating value scores...")
+    progress_bar.progress((len(cities) + 1) / total_steps)
     scored = score_all_listings(enriched)
 
-    progress_bar.progress(0.95)
-
     # Save
-    status_text.text("Saving to database...")
+    status_text.text("💾 Saving...")
+    progress_bar.progress(1.0)
     database.delete_all_listings()
     database.save_listings(scored)
 
     st.session_state.listings = scored
     st.session_state.last_refresh = datetime.now()
 
-    progress_bar.progress(1.0)
-    status_text.empty()
     progress_bar.empty()
-
-    st.success(f"Loaded {len(scored)} listings!")
+    status_text.empty()
+    st.success(f"✓ Loaded {len(scored)} listings!")
     time.sleep(1)
     st.rerun()
 
 
 def get_score_class(score):
-    """Get CSS class for score badge."""
     if not score:
         return "score-low"
     if score >= 55:
@@ -370,134 +309,96 @@ def get_score_class(score):
 
 
 def format_price(price):
-    """Format price with commas."""
     if not price:
         return "--"
     return f"${price:,.0f}"
 
 
-def format_number(num):
-    """Format number with commas."""
-    if not num:
+def format_compact_price(price):
+    if not price:
         return "--"
-    return f"{num:,.0f}"
+    if price >= 1000000:
+        return f"${price/1000000:.1f}M"
+    return f"${price/1000:.0f}K"
 
 
-def render_listing_card(listing: Listing):
-    """Render a single listing card."""
+def render_compact_card(listing: Listing):
+    """Render a compact listing card."""
     score_class = get_score_class(listing.value_score)
     price_class = "ideal" if listing.price and listing.price <= 600000 else ""
 
     features = []
-    if listing.has_yard:
-        features.append(("Yard", True))
     if listing.has_pool:
-        features.append(("Pool", True))
+        features.append("Pool")
+    if listing.has_yard:
+        features.append("Yard")
     if listing.has_solar:
-        features.append(("Solar", True))
-    if listing.year_built:
-        features.append((str(listing.year_built), False))
+        features.append("Solar")
 
-    card_html = f"""
-    <div class="listing-card">
-        <div class="card-header">
-            <div class="score-badge {score_class}">
-                <span class="score-value">{listing.value_score or '--'}</span>
-                <span class="score-label">Score</span>
-            </div>
-            <div class="price-tag">
-                <div class="price-value {price_class}">{format_price(listing.price)}</div>
-                <div class="hoa-tag">{'$' + str(listing.hoa_monthly) + '/mo HOA' if listing.hoa_monthly else 'No HOA'}</div>
-            </div>
+    features_html = " ".join([f'<span class="feature-dot" title="{f}"></span>' for f in features])
+    if features:
+        features_html += f' <span class="feature-text">{", ".join(features)}</span>'
+
+    return f"""
+    <div class="compact-card">
+        <div class="card-top">
+            <span class="score-pill {score_class}">{listing.value_score or '--'}</span>
+            <span class="card-price {price_class}">{format_compact_price(listing.price)}</span>
         </div>
-        <div class="address">{listing.address}</div>
-        <div class="location">{listing.city}, {listing.state} {listing.zip_code or ''}</div>
-        <div class="specs-row">
-            <div class="spec-item">
-                <div class="spec-value">{listing.beds}</div>
-                <div class="spec-label">Beds</div>
-            </div>
-            <div class="spec-item">
-                <div class="spec-value">{listing.baths}</div>
-                <div class="spec-label">Baths</div>
-            </div>
-            <div class="spec-item">
-                <div class="spec-value">{format_number(listing.sqft)}</div>
-                <div class="spec-label">Sq Ft</div>
-            </div>
-            <div class="spec-item">
-                <div class="spec-value">${int(listing.price / listing.sqft) if listing.price and listing.sqft else '--'}</div>
-                <div class="spec-label">Per Ft</div>
-            </div>
+        <div class="card-address">{listing.address}</div>
+        <div class="card-city">{listing.city} · {listing.year_built or 'N/A'}</div>
+        <div class="card-specs">
+            <span class="spec-tag"><strong>{listing.beds}</strong> bd</span>
+            <span class="spec-tag"><strong>{listing.baths}</strong> ba</span>
+            <span class="spec-tag"><strong>{listing.sqft:,}</strong> sqft</span>
+            <span class="spec-tag">${int(listing.price/listing.sqft) if listing.sqft else '--'}/ft</span>
         </div>
-        <div class="features-row">
-            {''.join([f'<span class="feature-tag {"active" if active else ""}">{label}</span>' for label, active in features])}
-            <span class="feature-tag">{listing.days_on_market or 0} days</span>
-            <span class="feature-tag">Crime: {listing.crime_index or '--'}</span>
-        </div>
+        <div class="card-features">{features_html}</div>
     </div>
     """
-
-    return card_html
 
 
 def filter_listings(listings, filters):
     """Filter listings based on user selections."""
     filtered = []
-
     for l in listings:
-        # Price
         if filters['min_price'] and l.price and l.price < filters['min_price']:
             continue
         if filters['max_price'] and l.price and l.price > filters['max_price']:
             continue
-
-        # Beds/Baths
         if filters['min_beds'] and l.beds and l.beds < filters['min_beds']:
             continue
         if filters['min_baths'] and l.baths and l.baths < filters['min_baths']:
             continue
-
-        # Sqft
         if filters['min_sqft'] and l.sqft and l.sqft < filters['min_sqft']:
             continue
-
-        # Cities
         if filters['cities'] and l.city not in filters['cities']:
             continue
-
-        # Features
         if filters['has_yard'] and not l.has_yard:
             continue
         if filters['has_pool'] and not l.has_pool:
             continue
         if filters['has_solar'] and not l.has_solar:
             continue
-
-        # Age
         if filters['max_age']:
             current_year = datetime.now().year
             if l.year_built and (current_year - l.year_built) > filters['max_age']:
                 continue
-
         filtered.append(l)
-
     return filtered
 
 
-def sort_listings(listings, sort_by, ascending=False):
+def sort_listings(listings, sort_by):
     """Sort listings by specified field."""
-    sort_key = {
-        "Value Score": lambda x: x.value_score or 0,
-        "Price (Low to High)": lambda x: x.price or 0,
-        "Price (High to Low)": lambda x: x.price or 0,
-        "Largest": lambda x: x.sqft or 0,
-        "Newest": lambda x: x.year_built or 0,
-        "Days on Market": lambda x: x.days_on_market or 0,
+    sort_config = {
+        "Value Score": (lambda x: x.value_score or 0, True),
+        "Price ↑": (lambda x: x.price or 0, False),
+        "Price ↓": (lambda x: x.price or 0, True),
+        "Largest": (lambda x: x.sqft or 0, True),
+        "Newest": (lambda x: x.year_built or 0, True),
     }
-
-    reverse = sort_by not in ["Price (Low to High)"]
-    return sorted(listings, key=sort_key.get(sort_by, lambda x: x.value_score or 0), reverse=reverse)
+    key_func, reverse = sort_config.get(sort_by, (lambda x: x.value_score or 0, True))
+    return sorted(listings, key=key_func, reverse=reverse)
 
 
 def main():
@@ -505,41 +406,31 @@ def main():
     init_session_state()
 
     # Header
-    st.markdown("""
-    <div class="custom-header">
-        <h1>🏠 Arizona House Hunter</h1>
-        <p>Phoenix & Tucson Metro</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("## 🏠 Arizona House Hunter")
 
     # Sidebar filters
     with st.sidebar:
         st.markdown("### Filters")
 
-        # Price range
         col1, col2 = st.columns(2)
         with col1:
-            min_price = st.number_input("Min Price", value=400000, step=10000, format="%d")
+            min_price = st.number_input("Min $", value=400000, step=25000, format="%d")
         with col2:
-            max_price = st.number_input("Max Price", value=700000, step=10000, format="%d")
+            max_price = st.number_input("Max $", value=700000, step=25000, format="%d")
 
-        # Beds/Baths
         col1, col2 = st.columns(2)
         with col1:
-            min_beds = st.selectbox("Min Beds", options=[1, 2, 3, 4, 5], index=2)
+            min_beds = st.selectbox("Beds", options=[1, 2, 3, 4, 5], index=2)
         with col2:
-            min_baths = st.selectbox("Min Baths", options=[1, 1.5, 2, 2.5, 3, 3.5, 4], index=2)
+            min_baths = st.selectbox("Baths", options=[1, 1.5, 2, 2.5, 3, 3.5, 4], index=2)
 
-        # Sqft
-        min_sqft = st.number_input("Min Sq Ft", value=1200, step=100, format="%d")
+        min_sqft = st.number_input("Min Sqft", value=1200, step=100, format="%d")
 
-        # Cities
         all_cities = ['Gilbert', 'Chandler', 'Scottsdale', 'Mesa', 'Queen Creek',
                       'Apache Junction', 'Tucson', 'Green Valley', 'Oro Valley', 'Marana', 'Vail']
         default_cities = ['Gilbert', 'Chandler', 'Scottsdale', 'Queen Creek', 'Green Valley', 'Oro Valley']
         cities = st.multiselect("Cities", options=all_cities, default=default_cities)
 
-        # Features
         st.markdown("**Features**")
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -549,27 +440,19 @@ def main():
         with col3:
             has_solar = st.checkbox("Solar")
 
-        # Max age
         max_age = st.selectbox("Max Age", options=[None, 5, 10, 20, 30], index=4,
-                               format_func=lambda x: "Any" if x is None else f"{x} years")
+                               format_func=lambda x: "Any" if x is None else f"{x} yrs")
 
         st.divider()
 
-        # Actions
         if st.button("🔄 Refresh Data", use_container_width=True):
             refresh_data()
 
         if st.button("📥 Export CSV", use_container_width=True):
-            listings = st.session_state.listings
-            if listings:
-                df = pd.DataFrame([l.to_dict() for l in listings])
-                csv = df.to_csv(index=False)
-                st.download_button(
-                    label="Download",
-                    data=csv,
-                    file_name=f"listings_{datetime.now().strftime('%Y%m%d')}.csv",
-                    mime="text/csv"
-                )
+            if st.session_state.listings:
+                df = pd.DataFrame([l.to_dict() for l in st.session_state.listings])
+                st.download_button("Download", df.to_csv(index=False),
+                                   f"listings_{datetime.now().strftime('%Y%m%d')}.csv", "text/csv")
 
     # Load listings
     if not st.session_state.listings:
@@ -577,113 +460,74 @@ def main():
 
     listings = st.session_state.listings
 
-    # Build filters dict
+    # Build filters
     filters = {
-        'min_price': min_price,
-        'max_price': max_price,
-        'min_beds': min_beds,
-        'min_baths': min_baths,
-        'min_sqft': min_sqft,
+        'min_price': min_price, 'max_price': max_price,
+        'min_beds': min_beds, 'min_baths': min_baths, 'min_sqft': min_sqft,
         'cities': cities if cities else None,
-        'has_yard': has_yard,
-        'has_pool': has_pool,
-        'has_solar': has_solar,
+        'has_yard': has_yard, 'has_pool': has_pool, 'has_solar': has_solar,
         'max_age': max_age
     }
 
-    # Filter listings
     filtered = filter_listings(listings, filters)
 
-    # Stats bar
-    if filtered:
-        avg_score = sum(l.value_score or 0 for l in filtered) / len(filtered)
-        prices = [l.price for l in filtered if l.price]
-        min_p = min(prices) if prices else 0
-        max_p = max(prices) if prices else 0
-
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Homes", len(filtered))
-        with col2:
-            st.metric("Avg Score", f"{avg_score:.0f}")
-        with col3:
-            st.metric("Price Range", f"${min_p/1000:.0f}K-${max_p/1000:.0f}K")
-
-    # Sort control
-    col1, col2 = st.columns([2, 1])
+    # Stats row
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        sort_by = st.selectbox(
-            "Sort by",
-            options=["Value Score", "Price (Low to High)", "Price (High to Low)",
-                     "Largest", "Newest", "Days on Market"],
-            label_visibility="collapsed"
-        )
+        st.metric("Homes", len(filtered))
+    with col2:
+        avg_score = sum(l.value_score or 0 for l in filtered) / len(filtered) if filtered else 0
+        st.metric("Avg Score", f"{avg_score:.0f}")
+    with col3:
+        prices = [l.price for l in filtered if l.price]
+        price_range = f"{format_compact_price(min(prices))}-{format_compact_price(max(prices))}" if prices else "--"
+        st.metric("Price Range", price_range)
+    with col4:
+        sort_by = st.selectbox("Sort", ["Value Score", "Price ↑", "Price ↓", "Largest", "Newest"],
+                               label_visibility="collapsed")
 
-    # Sort and display listings
     sorted_listings = sort_listings(filtered, sort_by)
 
+    # Empty state
     if not sorted_listings:
         st.markdown("---")
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("""
-            <div style="text-align: center; padding: 2rem;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">🏠</div>
-                <h3 style="color: #2D2A26; margin-bottom: 0.5rem;">No Listings Found</h3>
-                <p style="color: #6B6560; margin-bottom: 1.5rem;">
-                    Click the button below to fetch homes from Redfin
-                </p>
+            <div style="text-align: center; padding: 2rem; color: #a0a0a0;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🏠</div>
+                <h3 style="color: #f0f0f0;">No Listings Found</h3>
+                <p>Click the button below to fetch homes from Redfin</p>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("🔄 Fetch Listings from Redfin", use_container_width=True, type="primary"):
+            if st.button("🔄 Fetch Listings", use_container_width=True, type="primary"):
                 refresh_data()
-    else:
-        # Display listings as cards
-        for listing in sorted_listings[:50]:  # Limit to 50 for performance
-            card_html = render_listing_card(listing)
-            st.markdown(card_html, unsafe_allow_html=True)
+        return
 
-            # Expandable details
-            with st.expander(f"View Details: {listing.address}"):
-                col1, col2 = st.columns(2)
+    # Grid of cards - 4 columns on desktop
+    st.markdown("---")
+    cols_per_row = 4
 
-                with col1:
-                    st.markdown("**Property Details**")
-                    st.write(f"- Lot Size: {format_number(listing.lot_sqft)} sqft" if listing.lot_sqft else "- Lot Size: N/A")
-                    st.write(f"- Stories: {listing.stories or 'N/A'}")
-                    st.write(f"- HOA: {'$' + str(listing.hoa_monthly) + '/mo' if listing.hoa_monthly else 'None'}")
-                    st.write(f"- Days on Market: {listing.days_on_market or 'N/A'}")
+    for row_start in range(0, min(len(sorted_listings), 60), cols_per_row):
+        cols = st.columns(cols_per_row)
+        for i, col in enumerate(cols):
+            idx = row_start + i
+            if idx < len(sorted_listings):
+                listing = sorted_listings[idx]
+                with col:
+                    st.markdown(render_compact_card(listing), unsafe_allow_html=True)
+                    with st.expander("Details"):
+                        st.write(f"**{listing.address}**")
+                        st.write(f"{listing.city}, {listing.state} {listing.zip_code}")
+                        st.write(f"**Price:** {format_price(listing.price)}")
+                        st.write(f"**HOA:** {'$' + str(listing.hoa_monthly) + '/mo' if listing.hoa_monthly else 'None'}")
+                        st.write(f"**Days on Market:** {listing.days_on_market or 'N/A'}")
+                        st.write(f"**Crime Index:** {listing.crime_index or 'N/A'}")
+                        if listing.url:
+                            st.link_button("View on Redfin →", listing.url, use_container_width=True)
 
-                with col2:
-                    st.markdown("**Features**")
-                    st.write(f"- Yard: {'Yes' if listing.has_yard else 'No'}")
-                    st.write(f"- Pool: {'Yes' if listing.has_pool else 'No'}")
-                    st.write(f"- Solar: {'Yes' if listing.has_solar else 'No'}")
-                    st.write(f"- Crime Index: {listing.crime_index or 'N/A'}")
-
-                st.markdown("**Score Breakdown**")
-                breakdown_data = {
-                    "Factor": ["Location (25%)", "Sq Ft per Dollar (23%)", "Year Built (20%)",
-                               "Low HOA (13%)", "Private Yard (10%)", "Days on Market (3%)",
-                               "Pool (3%)", "Solar (3%)"],
-                    "Value": [
-                        listing.city or "N/A",
-                        f"{(listing.sqft / listing.price * 1000):.1f} sqft/$1k" if listing.sqft and listing.price else "N/A",
-                        str(listing.year_built) if listing.year_built else "N/A",
-                        f"${listing.hoa_monthly}/mo" if listing.hoa_monthly else "None",
-                        "Yes" if listing.has_yard else "No",
-                        f"{listing.days_on_market} days" if listing.days_on_market is not None else "N/A",
-                        "Yes" if listing.has_pool else "No",
-                        "Yes" if listing.has_solar else "No"
-                    ]
-                }
-                st.dataframe(pd.DataFrame(breakdown_data), hide_index=True, use_container_width=True)
-
-                if listing.url:
-                    st.link_button("View on Redfin →", listing.url, use_container_width=True)
-
-        if len(sorted_listings) > 50:
-            st.info(f"Showing 50 of {len(sorted_listings)} listings. Adjust filters to narrow results.")
+    if len(sorted_listings) > 60:
+        st.info(f"Showing 60 of {len(sorted_listings)} listings. Adjust filters to narrow results.")
 
 
 if __name__ == "__main__":
