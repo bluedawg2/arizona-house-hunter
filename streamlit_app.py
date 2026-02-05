@@ -262,20 +262,37 @@ def refresh_data():
         return
 
     # Enrich with progress
-    status_text.text(f"🔍 Enriching {len(all_listings)} listings...")
-    progress_bar.progress(len(cities) / total_steps)
+    from house_hunter.enrichment import GeoEnricher
+    geo_enricher = GeoEnricher()  # Shared instance
 
     enriched = []
-    enrich_progress = st.progress(0)
+    enrich_container = st.empty()
+
     for i, listing in enumerate(all_listings):
+        # Update progress display
+        pct = int((i + 1) / len(all_listings) * 100)
+        enrich_container.markdown(f"""
+        <div style="background: #242424; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span style="color: #a0a0a0;">🔍 Enriching listings...</span>
+                <span style="color: #f0f0f0; font-weight: 600;">{i+1} / {len(all_listings)}</span>
+            </div>
+            <div style="background: #333; border-radius: 4px; height: 8px; overflow: hidden;">
+                <div style="background: #C4704B; height: 100%; width: {pct}%; transition: width 0.1s;"></div>
+            </div>
+            <div style="color: #666; font-size: 0.8rem; margin-top: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {listing.address[:40]}{'...' if len(listing.address) > 40 else ''}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
         try:
-            enriched_listing = enrich_listing(listing)
+            enriched_listing = enrich_listing(listing, geo_enricher)
             enriched.append(enriched_listing)
         except:
             enriched.append(listing)
-        if i % 10 == 0:
-            enrich_progress.progress((i + 1) / len(all_listings))
-    enrich_progress.empty()
+
+    enrich_container.empty()
 
     # Score
     status_text.text("📊 Calculating value scores...")
