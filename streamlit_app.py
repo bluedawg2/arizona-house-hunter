@@ -19,7 +19,7 @@ st.set_page_config(
     page_title="Arizona House Hunter",
     page_icon="🏠",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # Custom CSS for mobile-first design
@@ -567,7 +567,20 @@ def main():
     sorted_listings = sort_listings(filtered, sort_by)
 
     if not sorted_listings:
-        st.info("No listings found. Try adjusting your filters or click 'Refresh Data' to fetch new listings.")
+        st.markdown("---")
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.markdown("""
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🏠</div>
+                <h3 style="color: #2D2A26; margin-bottom: 0.5rem;">No Listings Found</h3>
+                <p style="color: #6B6560; margin-bottom: 1.5rem;">
+                    Click the button below to fetch homes from Redfin
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("🔄 Fetch Listings from Redfin", use_container_width=True, type="primary"):
+                refresh_data()
     else:
         # Display listings as cards
         for listing in sorted_listings[:50]:  # Limit to 50 for performance
