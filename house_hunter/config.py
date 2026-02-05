@@ -2,7 +2,7 @@
 
 # Search Parameters
 SEARCH_CITIES = {
-    "phoenix_metro": ["Gilbert, AZ", "Chandler, AZ", "Scottsdale, AZ", "Mesa, AZ"],
+    "phoenix_metro": ["Gilbert, AZ", "Chandler, AZ", "Scottsdale, AZ", "Mesa, AZ", "Surprise, AZ"],
     "tucson_area": ["Tucson, AZ", "Green Valley, AZ", "Oro Valley, AZ"]
 }
 
@@ -15,6 +15,7 @@ REDFIN_REGIONS = {
     "Tucson": {"type": "city", "id": 19459, "state": "AZ"},
     "Green Valley": {"type": "city", "id": 23055, "state": "AZ"},
     "Oro Valley": {"type": "city", "id": 13300, "state": "AZ"},
+    "Surprise": {"type": "city", "id": 18267, "state": "AZ"},
 }
 
 # Price and property filters
@@ -37,6 +38,7 @@ DOWNTOWN_COORDS = {
     "Tucson": (32.2226, -110.9747),
     "Green Valley": (31.8543, -110.9932),
     "Oro Valley": (32.3909, -110.9665),
+    "Surprise": (33.6306, -112.3332),
 }
 
 # City-level crime indices (higher = safer, scale 0-100)
@@ -52,6 +54,7 @@ CITY_CRIME_INDEX = {
     "Oro Valley": 78,       # Safe (Tucson suburb)
     "Marana": 70,           # Safe (Tucson suburb)
     "Vail": 75,             # Safe (Tucson suburb)
+    "Surprise": 80,         # Safe (growing retiree community)
     "Apache Junction": 50,  # Moderate
 }
 
@@ -69,17 +72,18 @@ WEIGHTS = {
 
 # Location preference weights (0-1 scale, higher = more preferred)
 LOCATION_WEIGHTS = {
-    "Scottsdale": 1.00,
-    "Gilbert": 0.97,
-    "Chandler": 0.94,
-    "Queen Creek": 0.92,
-    "Oro Valley": 0.91,
-    "Green Valley": 0.89,
-    "Mesa": 0.86,
-    "Marana": 0.84,
-    "Tucson": 0.83,
-    "Vail": 0.82,
-    "Apache Junction": 0.80,
+    "Scottsdale": 1.00,       # Family proximity + top retiree amenities
+    "Gilbert": 0.97,          # #2 US News AZ retire, top safety/value
+    "Surprise": 0.95,         # #1 US News AZ retire (83 US), elite safety/value
+    "Chandler": 0.93,         # Top-5 AZ retire (187 US), healthcare balance
+    "Green Valley": 0.90,     # 55+ golf haven, top Niche retiree
+    "Oro Valley": 0.87,       # Strong Niche retiree, healthcare access
+    "Queen Creek": 0.85,      # #3 US News AZ retire (154 US), value growth
+    "Mesa": 0.82,             # Affordable healthcare hub
+    "Marana": 0.80,           # #5 AZ retire (159 US), value
+    "Apache Junction": 0.77,  # Budget retiree value
+    "Vail": 0.75,             # Quiet safety
+    "Tucson": 0.72,           # Amenities but urban crime
 }
 
 # Scraping settings
