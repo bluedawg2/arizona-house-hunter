@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arizona House Hunter</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header>
+        <h1>🏠 Arizona House Hunter</h1>
+        <p class="subtitle">Find the best value homes in Phoenix & Tucson</p>
+    </header>
+
+    <main>
+        <aside class="filters">
+            <div class="filter-header">
+                <h2>Filters</h2>
+                <button id="reset-filters" class="btn-secondary">Reset</button>
+            </div>
+
+            <div class="filter-group">
+                <label>Price Range</label>
+                <div class="range-inputs">
+                    <input type="number" id="min-price" placeholder="Min" value="400000" step="10000">
+                    <span>to</span>
+                    <input type="number" id="max-price" placeholder="Max" value="700000" step="10000">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Bedrooms (min)</label>
+                <select id="min-beds">
+                    <option value="">Any</option>
+                    <option value="2">2+</option>
+                    <option value="3" selected>3+</option>
+                    <option value="4">4+</option>
+                    <option value="5">5+</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Bathrooms (min)</label>
+                <select id="min-baths">
+                    <option value="">Any</option>
+                    <option value="1">1+</option>
+                    <option value="2" selected>2+</option>
+                    <option value="3">3+</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Square Feet (min)</label>
+                <input type="number" id="min-sqft" placeholder="Min SqFt" value="1200" step="100">
+            </div>
+
+            <div class="filter-group">
+                <label>Cities</label>
+                <div class="checkbox-group" id="city-filters">
+                    <label><input type="checkbox" value="Gilbert" checked> Gilbert</label>
+                    <label><input type="checkbox" value="Chandler" checked> Chandler</label>
+                    <label><input type="checkbox" value="Scottsdale" checked> Scottsdale</label>
+                    <label><input type="checkbox" value="Mesa"> Mesa</label>
+                    <label><input type="checkbox" value="Queen Creek" checked> Queen Creek</label>
+                    <label><input type="checkbox" value="Apache Junction"> Apache Junction</label>
+                    <label><input type="checkbox" value="Tucson"> Tucson</label>
+                    <label><input type="checkbox" value="Green Valley" checked> Green Valley</label>
+                    <label><input type="checkbox" value="Oro Valley" checked> Oro Valley</label>
+                    <label><input type="checkbox" value="Marana"> Marana</label>
+                    <label><input type="checkbox" value="Vail"> Vail</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Features</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="has-yard"> Has Yard</label>
+                    <label><input type="checkbox" id="has-pool"> Has Pool</label>
+                    <label><input type="checkbox" id="has-solar"> Has Solar</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Max Age (years)</label>
+                <select id="max-age">
+                    <option value="">Any</option>
+                    <option value="5">5 years</option>
+                    <option value="10">10 years</option>
+                    <option value="20">20 years</option>
+                    <option value="30" selected>30 years</option>
+                </select>
+            </div>
+
+            <button id="apply-filters" class="btn-primary">Apply Filters</button>
+        </aside>
+
+        <section class="content">
+            <div class="toolbar">
+                <div class="stats" id="stats">
+                    <span id="listing-count">0 listings</span>
+                </div>
+                <div class="actions">
+                    <button id="refresh-btn" class="btn-primary">
+                        <span class="refresh-icon">↻</span> Refresh Data
+                    </button>
+                    <button id="export-btn" class="btn-secondary">
+                        <span>📥</span> Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <span>Loading listings...</span>
+            </div>
+
+            <div id="error" class="error hidden"></div>
+
+            <table id="listings-table" class="display">
+                <thead>
+                    <tr>
+                        <th>Value Score</th>
+                        <th>Address</th>
+                        <th>City</th>
+                        <th>Price</th>
+                        <th>Beds</th>
+                        <th>Baths</th>
+                        <th>SqFt</th>
+                        <th>Year</th>
+                        <th title="Number of Stories">Floors</th>
+                        <th>HOA</th>
+                        <th title="Days on Market">Days</th>
+                        <th>Yard</th>
+                        <th>Pool</th>
+                        <th>Crime</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <div id="detail-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>

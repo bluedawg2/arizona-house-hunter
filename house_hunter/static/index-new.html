@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2D2A26">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Arizona House Hunter</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/styles-new.css">
+</head>
+<body>
+    <!-- Mobile Filter Overlay -->
+    <div id="filter-overlay" class="filter-overlay"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 3L3 13V28H12V20H20V28H29V13L16 3Z" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="16" cy="14" r="2" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Arizona House Hunter</h1>
+                    <p>Phoenix & Tucson Metro</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="filter-toggle" class="btn-icon" aria-label="Toggle filters">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 6h16M6 12h12M8 18h8"/>
+                    </svg>
+                    <span class="filter-badge" id="filter-badge">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stats-content">
+            <div class="stat-item">
+                <span class="stat-value" id="listing-count">--</span>
+                <span class="stat-label">Homes</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-value" id="avg-score">--</span>
+                <span class="stat-label">Avg Score</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-value" id="price-range">--</span>
+                <span class="stat-label">Price Range</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Filter Panel (Slide-in on mobile) -->
+        <aside id="filter-panel" class="filter-panel">
+            <div class="filter-header">
+                <h2>Filters</h2>
+                <button id="close-filters" class="btn-close" aria-label="Close filters">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="filter-body">
+                <div class="filter-section">
+                    <h3>Price Range</h3>
+                    <div class="range-slider-container">
+                        <div class="range-inputs">
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="min-price" value="400000" step="10000" placeholder="Min">
+                            </div>
+                            <span class="range-separator">—</span>
+                            <div class="input-group">
+                                <span class="input-prefix">$</span>
+                                <input type="number" id="max-price" value="700000" step="10000" placeholder="Max">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Property Size</h3>
+                    <div class="filter-row">
+                        <div class="filter-field">
+                            <label>Beds</label>
+                            <div class="stepper">
+                                <button type="button" class="stepper-btn" data-action="decrement" data-target="min-beds">−</button>
+                                <input type="number" id="min-beds" value="3" min="1" max="6" readonly>
+                                <button type="button" class="stepper-btn" data-action="increment" data-target="min-beds">+</button>
+                            </div>
+                        </div>
+                        <div class="filter-field">
+                            <label>Baths</label>
+                            <div class="stepper">
+                                <button type="button" class="stepper-btn" data-action="decrement" data-target="min-baths">−</button>
+                                <input type="number" id="min-baths" value="2" min="1" max="5" step="0.5" readonly>
+                                <button type="button" class="stepper-btn" data-action="increment" data-target="min-baths">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-field full-width">
+                        <label>Min Square Feet</label>
+                        <input type="number" id="min-sqft" value="1200" step="100" class="input-lg">
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Location</h3>
+                    <div class="city-chips" id="city-filters">
+                        <button type="button" class="chip active" data-city="Gilbert">Gilbert</button>
+                        <button type="button" class="chip active" data-city="Chandler">Chandler</button>
+                        <button type="button" class="chip active" data-city="Scottsdale">Scottsdale</button>
+                        <button type="button" class="chip" data-city="Mesa">Mesa</button>
+                        <button type="button" class="chip active" data-city="Queen Creek">Queen Creek</button>
+                        <button type="button" class="chip" data-city="Apache Junction">Apache Jct</button>
+                        <button type="button" class="chip" data-city="Tucson">Tucson</button>
+                        <button type="button" class="chip active" data-city="Green Valley">Green Valley</button>
+                        <button type="button" class="chip active" data-city="Oro Valley">Oro Valley</button>
+                        <button type="button" class="chip" data-city="Marana">Marana</button>
+                        <button type="button" class="chip" data-city="Vail">Vail</button>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Features</h3>
+                    <div class="toggle-group">
+                        <label class="toggle-item">
+                            <span class="toggle-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+                                Private Yard
+                            </span>
+                            <input type="checkbox" id="has-yard" class="toggle-input">
+                            <span class="toggle-switch"></span>
+                        </label>
+                        <label class="toggle-item">
+                            <span class="toggle-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="10" ry="6"/><path d="M12 18v2M8 17.5l-1 2M16 17.5l1 2"/></svg>
+                                Pool
+                            </span>
+                            <input type="checkbox" id="has-pool" class="toggle-input">
+                            <span class="toggle-switch"></span>
+                        </label>
+                        <label class="toggle-item">
+                            <span class="toggle-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                                Solar Panels
+                            </span>
+                            <input type="checkbox" id="has-solar" class="toggle-input">
+                            <span class="toggle-switch"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Max Age</h3>
+                    <div class="age-buttons">
+                        <button type="button" class="age-btn" data-age="5">5 yrs</button>
+                        <button type="button" class="age-btn" data-age="10">10 yrs</button>
+                        <button type="button" class="age-btn" data-age="20">20 yrs</button>
+                        <button type="button" class="age-btn active" data-age="30">30 yrs</button>
+                        <button type="button" class="age-btn" data-age="">Any</button>
+                    </div>
+                    <input type="hidden" id="max-age" value="30">
+                </div>
+            </div>
+
+            <div class="filter-footer">
+                <button id="reset-filters" class="btn-secondary">Reset All</button>
+                <button id="apply-filters" class="btn-primary">Show Results</button>
+            </div>
+        </aside>
+
+        <!-- Listings Grid -->
+        <section class="listings-section">
+            <!-- Action Bar -->
+            <div class="action-bar">
+                <div class="sort-control">
+                    <label for="sort-select">Sort by</label>
+                    <select id="sort-select">
+                        <option value="value_score-desc" selected>Best Value</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                        <option value="sqft-desc">Largest</option>
+                        <option value="year_built-desc">Newest</option>
+                        <option value="days_on_market-desc">Longest on Market</option>
+                    </select>
+                </div>
+                <div class="action-buttons">
+                    <button id="refresh-btn" class="btn-action">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6M1 20v-6h6"/>
+                            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                        </svg>
+                        <span>Refresh</span>
+                    </button>
+                    <button id="export-btn" class="btn-action">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        <span>Export</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading" class="loading-state hidden">
+                <div class="loader">
+                    <div class="loader-ring"></div>
+                    <div class="loader-ring"></div>
+                    <div class="loader-ring"></div>
+                </div>
+                <p>Searching Arizona homes...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error" class="error-state hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <p id="error-message">Something went wrong</p>
+                <button class="btn-secondary" onclick="location.reload()">Try Again</button>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty" class="empty-state hidden">
+                <div class="empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                        <path d="M9 22V12h6v10"/>
+                    </svg>
+                </div>
+                <h3>No homes found</h3>
+                <p>Try adjusting your filters or refresh to fetch new listings</p>
+                <button id="refresh-empty" class="btn-primary">Refresh Data</button>
+            </div>
+
+            <!-- Listings Grid -->
+            <div id="listings-grid" class="listings-grid"></div>
+
+            <!-- Load More -->
+            <div id="load-more-container" class="load-more hidden">
+                <button id="load-more" class="btn-secondary">Load More</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Detail Modal -->
+    <div id="detail-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-container">
+            <div class="modal-content" id="modal-body">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/app-new.js"></script>
+</body>
+</html>
