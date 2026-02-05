@@ -277,29 +277,85 @@ def load_listings_from_db():
 
 
 def refresh_data():
-    """Fetch fresh data from Redfin API."""
-    with st.spinner("Fetching listings from Redfin..."):
-        listings = fetch_listings()
+    """Fetch fresh data from Redfin API with progress tracking."""
+    import time
+    from house_hunter.fetcher import RedfinFetcher
+    from house_hunter import config as hh_config
 
-        if not listings:
-            st.error("No listings fetched. The API may be temporarily unavailable.")
-            return
+    # Initialize
+    all_listings = []
+    seen_ids = set()
+    cities = list(hh_config.REDFIN_REGIONS.keys())
 
-        st.info(f"Enriching {len(listings)} listings...")
-        enriched = enrich_all_listings(listings)
+    # Create progress UI
+    progress_bar = st.progress(0)
+    status_text = st.empty()
 
-        st.info("Calculating value scores...")
-        scored = score_all_listings(enriched)
+    fetcher = RedfinFetcher()
 
-        # Save to database
-        database.delete_all_listings()
-        database.save_listings(scored)
+    for i, city in enumerate(cities):
+        # Update progress
+        progress = (i) / len(cities)
+        progress_bar.progress(progress)
+        status_text.text(f"Fetching {city}... ({i+1}/{len(cities)})")
 
-        st.session_state.listings = scored
-        st.session_state.last_refresh = datetime.now()
+        try:
+            listings = fetcher.fetch_city_listings(city)
 
-        st.success(f"Refreshed {len(scored)} listings!")
-        st.rerun()
+            # Deduplicate
+            for listing in listings:
+                if listing.id not in seen_ids:
+                    seen_ids.add(listing.id)
+                    all_listings.append(listing)
+
+            status_text.text(f"Found {len(listings)} in {city} ({len(all_listings)} total)")
+
+        except Exception as e:
+            status_text.text(f"Error fetching {city}: {str(e)[:50]}")
+
+        # Brief delay between requests
+        if i < len(cities) - 1:
+            time.sleep(1.5)
+
+    progress_bar.progress(0.7)
+
+    if not all_listings:
+        progress_bar.empty()
+        status_text.empty()
+        st.error("No listings fetched. Redfin may be blocking this server. Try running locally instead.")
+        return
+
+    # Enrich
+    status_text.text(f"Enriching {len(all_listings)} listings...")
+    try:
+        enriched = enrich_all_listings(all_listings)
+    except Exception as e:
+        st.warning(f"Enrichment partial: {e}")
+        enriched = all_listings
+
+    progress_bar.progress(0.85)
+
+    # Score
+    status_text.text("Calculating value scores...")
+    scored = score_all_listings(enriched)
+
+    progress_bar.progress(0.95)
+
+    # Save
+    status_text.text("Saving to database...")
+    database.delete_all_listings()
+    database.save_listings(scored)
+
+    st.session_state.listings = scored
+    st.session_state.last_refresh = datetime.now()
+
+    progress_bar.progress(1.0)
+    status_text.empty()
+    progress_bar.empty()
+
+    st.success(f"Loaded {len(scored)} listings!")
+    time.sleep(1)
+    st.rerun()
 
 
 def get_score_class(score):
