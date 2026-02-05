@@ -87,7 +87,16 @@ REQUEST_DELAY_SECONDS = 2.5  # Delay between requests to avoid blocks
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 # Database settings
-DATABASE_PATH = "house_hunter/data/listings.db"
+# Use temp directory for Streamlit Cloud compatibility
+import os
+import tempfile
+
+if os.environ.get("STREAMLIT_SERVER_HEADLESS"):
+    # Running on Streamlit Cloud - use temp directory
+    DATABASE_PATH = os.path.join(tempfile.gettempdir(), "listings.db")
+else:
+    # Local development
+    DATABASE_PATH = "house_hunter/data/listings.db"
 
 # Flask settings
 FLASK_HOST = "0.0.0.0"

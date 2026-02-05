@@ -1,16 +1,9 @@
 # Arizona House Hunter - Dependencies
+# For Streamlit Cloud deployment
 
-# Web frameworks
-flask>=2.3.0
 streamlit>=1.29.0
-
-# HTTP & scraping
+pandas>=2.0.0
 requests>=2.31.0
 beautifulsoup4>=4.12.0
 lxml>=4.9.0
-
-# Geocoding
 geopy>=2.4.0
-
-# Data processing
-pandas>=2.0.0
